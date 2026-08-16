@@ -1,0 +1,1 @@
+console.log("RaviVerse app initialized");
