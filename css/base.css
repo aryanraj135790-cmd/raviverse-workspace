@@ -73,12 +73,58 @@ body > header {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
+/* Core Styling for the Workspace Link Anchor */
 body > header > a {
-  color: var(--color-text-primary);
   text-decoration: none;
   font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  outline: none;
+  background: linear-gradient(
+    135deg,
+    var(--color-text-primary, #ffffff) 0%,
+    var(--color-accent, #3b82f6) 50%,
+    var(--color-accent-purple, #a855f7) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition:
+    background-position 0.5s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    filter 0.3s ease,
+    box-shadow 0.2s ease;
 }
+
+body > header > a:hover {
+  transform: translateY(-2px) scale(1.02);
+  background-position: right center;
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.35));
+}
+
+body > header > a:active {
+  transform: translateY(0) scale(0.98);
+}
+
+body > header > a:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-bg-main, #0f172a),
+    0 0 0 4px var(--color-accent, #3b82f6);
+  -webkit-text-fill-color: initial;
+  background: none;
+  color: var(--color-accent, #3b82f6);
+}
+
+body > header > a:hover::after {
+  border-color: var(--color-accent-purple, #a855f7);
+}
+
 body > header > div {
   display: flex;
   gap: var(--space-sm);
