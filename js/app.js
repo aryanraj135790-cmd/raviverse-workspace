@@ -1,10 +1,19 @@
 // Format numbers
 function formatStatNumber(num) {
-  if (typeof num !== "number") return num;
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
+  if (typeof num !== "number" || !Number.isFinite(num)) {
+    return num;
   }
-  return num.toString();
+  const absNum = Math.abs(num);
+  if (absNum < 1000) {
+    return num.toString();
+  }
+  const units = ["", "K", "M", "B", "T"];
+  const i = Math.min(Math.floor(Math.log10(absNum) / 3), units.length - 1);
+  const scaled = num / Math.pow(1000, i);
+  const formatted = scaled.toFixed(1);
+  return (
+    (formatted.endsWith(".0") ? formatted.slice(0, -2) : formatted) + units[i]
+  );
 }
 
 // Update Dashboard Stats
@@ -20,7 +29,11 @@ function renderDashboardStats(data, elementsMap) {
     const statElement = elementsMap[key];
 
     if (statElement) {
-      statElement.textContent = formatStatNumber(value);
+      const nextValue = String(formatStatNumber(value));
+      // Prevent unnecessary DOM updates
+      if (statElement.textContent !== nextValue) {
+        statElement.textContent = nextValue;
+      }
     } else {
       console.warn(
         `Dashboard element for stat key "${key}" was not found in the elements map.`,
@@ -47,7 +60,11 @@ function getDashboardStatElements() {
 // Delay Tool
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Status Update
+function isValidId(id) {
+  return Number.isInteger(id) && id > 0;
+}
+
+// Get dashboard status element
 function getDashboardStatusElement() {
   return document.querySelector("#dashboard-status");
 }
@@ -107,12 +124,12 @@ function validateProject(project, index) {
     );
   }
   if (
-    typeof project.id !== "number" ||
+    !isValidId(project.id) ||
     typeof project.name !== "string" ||
     !project.name.trim()
   ) {
     throw new Error(
-      `Invalid project at index ${index}: 'id' must be a number and 'name' must be a non-empty string.`,
+      `Invalid project at index ${index}: 'id' must be a positive integer and 'name' must be a non-empty string.`,
     );
   }
 }
@@ -126,13 +143,13 @@ function validateTask(task, index) {
   }
 
   if (
-    typeof task.id !== "number" ||
+    !isValidId(task.id) ||
     typeof task.title !== "string" ||
     !task.title.trim() ||
     (task.status !== "completed" && task.status !== "pending")
   ) {
     throw new Error(
-      `Invalid task at index ${index}: 'id' must be a number, 'title' must be a non-empty string, and 'status' must be "completed" or "pending".`,
+      `Invalid task at index ${index}: 'id' must be a positive integer, 'title' must be a non-empty string, and 'status' must be "completed" or "pending".`,
     );
   }
 }
@@ -145,12 +162,12 @@ function validateNote(note, index) {
     );
   }
   if (
-    typeof note.id !== "number" ||
+    !isValidId(note.id) ||
     typeof note.title !== "string" ||
     !note.title.trim()
   ) {
     throw new Error(
-      `Invalid note at index ${index}: 'id' must be a number and 'title' must be a non-empty string.`,
+      `Invalid note at index ${index}: 'id' must be a positive integer and 'title' must be a non-empty string.`,
     );
   }
 }
@@ -182,7 +199,7 @@ async function getRaviVerseData() {
 
   return validateRaviVerseData(data);
 }
-//Deal with business logic/calculation
+// Calculate dashboard statistics
 function calculateDashboardStats(raviVerseData) {
   const taskStats = raviVerseData.tasks.reduce(
     (acc, curr) => ({
@@ -206,7 +223,7 @@ function calculateDashboardStats(raviVerseData) {
     pendingTasks: taskStats.pendingTasks,
   };
 }
-// Transform Our Data
+// Get and transform dashboard data
 async function getDashboardData() {
   const raviVerseData = await getRaviVerseData();
   return calculateDashboardStats(raviVerseData);
