@@ -182,10 +182,8 @@ async function getRaviVerseData() {
 
   return validateRaviVerseData(data);
 }
-
-// Transform Our Data
-async function getDashboardData() {
-  const raviVerseData = await getRaviVerseData();
+//Deal with business logic/calculation
+function calculateDashboardStats(raviVerseData) {
   const taskStats = raviVerseData.tasks.reduce(
     (acc, curr) => ({
       totalTasks: acc.totalTasks + 1,
@@ -199,14 +197,19 @@ async function getDashboardData() {
       pendingTasks: 0,
     },
   );
-  const dashboardData = {
+
+  return {
     projects: raviVerseData.projects.length,
     tasks: taskStats.totalTasks,
     notes: raviVerseData.notes.length,
     completedTasks: taskStats.completedTasks,
     pendingTasks: taskStats.pendingTasks,
   };
-  return dashboardData;
+}
+// Transform Our Data
+async function getDashboardData() {
+  const raviVerseData = await getRaviVerseData();
+  return calculateDashboardStats(raviVerseData);
 }
 
 // dashboard initialization
