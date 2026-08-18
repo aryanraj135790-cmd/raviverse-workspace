@@ -229,22 +229,90 @@ async function getDashboardData() {
   return calculateDashboardStats(raviVerseData);
 }
 
-// dashboard initialization
-async function initDashboard() {
-  const statusElement = getDashboardStatusElement();
-  const dashboardElementsMap = getDashboardStatElements();
+// State Manager
+function createDashboardState(currentState, status, data = null, error = null) {
+  const validStatuses = ["idle", "loading", "success", "error"];
 
+  if (typeof status !== "string" || !validStatuses.includes(status.trim())) {
+    throw new Error(
+      `Invalid status: "${status}". Expected one of: ${validStatuses.join(", ")}`,
+    );
+  }
+  const cleanStatus = status.trim();
+  const safeData = currentState.data ?? null;
+  let nextData;
+  if (cleanStatus === "idle") {
+    nextData = null;
+  } else if (cleanStatus === "success") {
+    nextData = data;
+  } else {
+    nextData = safeData;
+  }
+  return {
+    status: cleanStatus,
+    data: nextData,
+    error: cleanStatus === "error" ? error : null,
+  };
+}
+
+// Data Store
+function createDashboardStore(initialState) {
+  let currentState = initialState;
+  return {
+    getState: function () {
+      return currentState;
+    },
+    setState: function (status, data, error) {
+      currentState = createDashboardState(currentState, status, data, error);
+      return currentState;
+    },
+  };
+}
+//UI State Management
+function renderDashboardState(state) {
+  const statusElement = getDashboardStatusElement();
+  if (!statusElement) return;
+  switch (state.status) {
+    case "idle":
+      statusElement.textContent = "Dashboard is ready.";
+      break;
+    case "loading":
+      statusElement.textContent = "Loading dashboard...";
+      break;
+    case "success":
+      statusElement.textContent = "Dashboard loaded.";
+      renderDashboardStats(state.data, getDashboardStatElements());
+      break;
+    case "error":
+      statusElement.textContent = "Failed to load dashboard. Please try again.";
+      break;
+  }
+}
+const initialDashboardState = {
+  status: "idle",
+  data: null,
+  error: null,
+};
+const dashboardStore = createDashboardStore(initialDashboardState);
+
+// Small Orchestration Helper
+function transitionDashboard(store, status, data, error) {
+  const nextState = store.setState(status, data, error);
+  renderDashboardState(nextState);
+}
+
+// Dashboard Orchestration Initialization
+async function initDashboard() {
   try {
-    statusElement.textContent = "Loading dashboard...";
+    transitionDashboard(dashboardStore, "loading");
     const dashboardData = await getDashboardData();
-    renderDashboardStats(dashboardData, dashboardElementsMap);
-    statusElement.textContent = "Dashboard loaded.";
+    transitionDashboard(dashboardStore, "success", dashboardData);
   } catch (error) {
     if (error.cause) {
-      console.dir("Original System Error Details:", error.cause);
+      console.error("Original System Error Details:", error.cause);
     }
     console.error("Dashboard Init Failed ->", error.message);
-    statusElement.textContent = "Dashboard initialization failed.";
+    transitionDashboard(dashboardStore, "error", null, error);
   }
 }
 
