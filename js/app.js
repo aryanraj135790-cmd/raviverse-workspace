@@ -69,6 +69,11 @@ function getDashboardStatusElement() {
   return document.querySelector("#dashboard-status");
 }
 
+// Get dashboard refresh element
+function getDashboardRefreshElement() {
+  return document.querySelector("#dashboard-refresh");
+}
+
 // Validate Our API response
 function validateRaviVerseData(data) {
   if (!data) {
@@ -271,6 +276,10 @@ function createDashboardStore(initialState) {
 //UI State Management
 function renderDashboardState(state) {
   const statusElement = getDashboardStatusElement();
+  const refreshButton = getDashboardRefreshElement();
+  if (refreshButton) {
+    refreshButton.disabled = state.status === "loading";
+  }
   if (!statusElement) return;
   switch (state.status) {
     case "idle":
@@ -288,12 +297,6 @@ function renderDashboardState(state) {
       break;
   }
 }
-const initialDashboardState = {
-  status: "idle",
-  data: null,
-  error: null,
-};
-const dashboardStore = createDashboardStore(initialDashboardState);
 
 // Small Orchestration Helper
 function transitionDashboard(store, status, data, error) {
@@ -301,19 +304,45 @@ function transitionDashboard(store, status, data, error) {
   renderDashboardState(nextState);
 }
 
-// Dashboard Orchestration Initialization
-async function initDashboard() {
+async function loadDashboard(store) {
   try {
-    transitionDashboard(dashboardStore, "loading");
+    transitionDashboard(store, "loading");
     const dashboardData = await getDashboardData();
-    transitionDashboard(dashboardStore, "success", dashboardData);
+    transitionDashboard(store, "success", dashboardData);
+    return store.getState();
   } catch (error) {
     if (error.cause) {
       console.error("Original System Error Details:", error.cause);
     }
     console.error("Dashboard Init Failed ->", error.message);
-    transitionDashboard(dashboardStore, "error", null, error);
+    transitionDashboard(store, "error", null, error);
+    return store.getState();
   }
 }
 
+function refreshDashboard() {
+  return loadDashboard(dashboardStore);
+}
+
+//Dashboard Event Listeners
+function setupDashboardEvents() {
+  const refreshButton = getDashboardRefreshElement();
+  if (!refreshButton) return;
+  refreshButton.addEventListener("click", refreshDashboard);
+}
+
+const initialDashboardState = {
+  status: "idle",
+  data: null,
+  error: null,
+};
+
+const dashboardStore = createDashboardStore(initialDashboardState);
+
+// Dashboard Orchestration Initialization
+function initDashboard() {
+  return loadDashboard(dashboardStore);
+}
+
+setupDashboardEvents();
 initDashboard();
