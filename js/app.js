@@ -74,6 +74,11 @@ function getDashboardRefreshElement() {
   return document.querySelector("#dashboard-refresh");
 }
 
+// Recent Activity List Element
+function getRecentActivityListElement() {
+  return document.querySelector("#recent-activity-list");
+}
+
 // Get toast container
 let currentToast = null;
 let currentToastTimer = null;
@@ -112,6 +117,11 @@ function validateRaviVerseData(data) {
       "Validation failure: 'notes' property missing or is not an array.",
     );
   }
+  if (!Array.isArray(data.activities)) {
+    throw new Error(
+      "Validation failure: 'activity' property missing or is not an array.",
+    );
+  }
 
   data.projects.forEach((project, index) => {
     validateProject(project, index);
@@ -123,6 +133,9 @@ function validateRaviVerseData(data) {
 
   data.notes.forEach((note, index) => {
     validateNote(note, index);
+  });
+  data.activities.forEach((activity, index) => {
+    validateActivity(activity, index);
   });
 
   return data;
@@ -184,6 +197,178 @@ function validateNote(note, index) {
   }
 }
 
+// Validate Our Activity Data
+function validateActivity(activity, index) {
+  const prefix = typeof index === "number" ? `[Index ${index}] ` : "";
+  if (!activity || typeof activity !== "object" || Array.isArray(activity)) {
+    throw new Error(`${prefix}Activity must be a valid, non-null object.`);
+  }
+  const { id, type, entityType, entityId, createdAt } = activity;
+  if (typeof id !== "number" || !Number.isInteger(id) || id <= 0) {
+    throw new Error(
+      `${prefix}Invalid 'id': Expected a positive integer, received: ${id}`,
+    );
+  }
+  const allowedEntityTypes = ["project", "task", "note"];
+  if (!allowedEntityTypes.includes(entityType)) {
+    throw new Error(
+      `${prefix}Invalid 'entityType': Expected one of [${allowedEntityTypes.join(", ")}], received: '${entityType}'`,
+    );
+  }
+  const allowedTypes = [
+    "project_created",
+    "project_updated",
+    "task_created",
+    "task_updated",
+    "task_completed",
+    "note_created",
+    "note_updated",
+  ];
+  if (!allowedTypes.includes(type)) {
+    throw new Error(
+      `${prefix}Invalid 'type': Received an unauthorized activity type string: '${type}'`,
+    );
+  }
+  if (
+    typeof entityId !== "number" ||
+    !Number.isInteger(entityId) ||
+    entityId <= 0
+  ) {
+    throw new Error(
+      `${prefix}Invalid 'entityId': Expected a positive integer, received: ${entityId}`,
+    );
+  }
+  if (typeof createdAt !== "string" || !createdAt.trim()) {
+    throw new Error(
+      `${prefix}Invalid 'createdAt': Expected a non-empty string, received: '${createdAt}'`,
+    );
+  }
+  const parsedDate = Date.parse(createdAt);
+  if (
+    typeof createdAt !== "string" ||
+    !createdAt.trim() ||
+    Number.isNaN(parsedDate) ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(createdAt)
+  ) {
+    throw new Error(
+      `${prefix}Invalid 'createdAt': Expected a valid parseable date string, received: '${createdAt}'`,
+    );
+  }
+}
+
+const activityMessages = {
+  project_created: "Project created",
+  project_updated: "Project updated",
+  task_created: "Task created",
+  task_updated: "Task updated",
+  task_completed: "Task completed",
+  note_created: "Note created",
+  note_updated: "Note updated",
+};
+
+function transformActivity(activity) {
+  return {
+    id: activity.id,
+    message: activityMessages[activity.type],
+    entityType: activity.entityType,
+    entityId: activity.entityId,
+    createdAt: activity.createdAt,
+  };
+}
+
+function transformActivities(activities) {
+  return activities.map(transformActivity);
+}
+
+function getRecentActivities(activities, limit = 5) {
+  return activities
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, limit);
+}
+
+function getDashboardRecentActivities(activities) {
+  return transformActivities(getRecentActivities(activities, 5));
+}
+
+function renderRecentActivities(activities) {
+  const listElement = getRecentActivityListElement();
+  if (!listElement) return;
+  listElement.replaceChildren();
+  if (activities.length === 0) {
+    const li = document.createElement("li");
+    const p = document.createElement("p");
+    p.textContent = "No recent activity yet.";
+    li.appendChild(p);
+    listElement.appendChild(li);
+    return;
+  }
+  activities.forEach((item) => {
+    const li = document.createElement("li");
+    li.classList.add("recent-activity-li");
+    const p = document.createElement("p");
+    p.textContent = item.message;
+    const span = document.createElement("span");
+    const entityLabel =
+      item.entityType.charAt(0).toUpperCase() + item.entityType.slice(1);
+    span.textContent = `${entityLabel} #${item.entityId}`;
+    const time = document.createElement("time");
+    time.textContent = formatActivityDate(item.createdAt);
+    li.append(p, span, time);
+    listElement.appendChild(li);
+  });
+}
+
+function formatActivityDate(createdAt) {
+  if (!createdAt) return "";
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "";
+  const diffInSeconds = Math.floor((new Date() - date) / 1000);
+  const rtf = new Intl.RelativeTimeFormat("en", {
+    numeric: "auto",
+  });
+  if (diffInSeconds < 60) return "just now";
+  if (diffInSeconds < 3600) {
+    return rtf.format(-Math.floor(diffInSeconds / 60), "minute");
+  }
+  if (diffInSeconds < 86400) {
+    return rtf.format(-Math.floor(diffInSeconds / 3600), "hour");
+  }
+  return rtf.format(-Math.floor(diffInSeconds / 86400), "day");
+}
+
+function renderRecentActivitiesLoadingState(isLoading) {
+  const listElement = getRecentActivityListElement();
+  if (!listElement) return;
+  if (isLoading) {
+    listElement.replaceChildren();
+    for (let i = 0; i < 5; i++) {
+      const li = document.createElement("li");
+      li.classList.add("recent-activity-li", "is-loading");
+      const message = document.createElement("span");
+      message.classList.add("activity-message-loading");
+      const entity = document.createElement("span");
+      entity.classList.add("activity-entity-loading");
+      const time = document.createElement("time");
+      time.classList.add("activity-time-loading");
+      li.append(message, entity, time);
+      listElement.append(li);
+    }
+  }
+}
+
+function renderRecentActivitiesRefreshState(isRefreshing) {
+  const listElement = getRecentActivityListElement();
+
+  if (!listElement) return;
+
+  if (isRefreshing) {
+    listElement.classList.add("is-refreshing");
+  } else {
+    listElement.classList.remove("is-refreshing");
+  }
+}
+
 // Fetch Data From Server
 async function getRaviVerseData() {
   await delay(3000);
@@ -238,7 +423,12 @@ function calculateDashboardStats(raviVerseData) {
 // Get and transform dashboard data
 async function getDashboardData() {
   const raviVerseData = await getRaviVerseData();
-  return calculateDashboardStats(raviVerseData);
+  return {
+    stats: calculateDashboardStats(raviVerseData),
+    recentActivities: getDashboardRecentActivities(
+      raviVerseData.activities ?? [],
+    ),
+  };
 }
 
 // State Manager
@@ -290,6 +480,12 @@ function renderDashboardState(state, successMessage) {
     refreshButton.disabled = state.status === "loading";
   }
   renderDashboardLoadingState(state, dashboardStatCards);
+  renderRecentActivitiesLoadingState(
+    state.status === "loading" && state.data === null,
+  );
+  renderRecentActivitiesRefreshState(
+    state.status === "loading" && state.data !== null,
+  );
   if (!statusElement) return;
   switch (state.status) {
     case "idle":
@@ -300,7 +496,8 @@ function renderDashboardState(state, successMessage) {
       break;
     case "success":
       statusElement.textContent = "Dashboard loaded.";
-      renderDashboardStats(state.data, dashboardStatElements);
+      renderDashboardStats(state.data.stats, dashboardStatElements);
+      renderRecentActivities(state.data.recentActivities);
       if (successMessage) {
         showToast(successMessage, "success");
       }
