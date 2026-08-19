@@ -1,5 +1,5 @@
-import { validateRaviVerseData } from "./validation/validators.js";
-
+import { getRaviVerseData } from "./api/raviverse-api.js";
+import { getDashboardRecentActivities } from "./transformation/activity-transformer.js";
 // Format numbers
 function formatStatNumber(num) {
   if (typeof num !== "number" || !Number.isFinite(num)) {
@@ -59,9 +59,6 @@ function getDashboardStatElements() {
   );
 }
 
-// Delay Tool
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 // Get dashboard status element
 function getDashboardStatusElement() {
   return document.querySelector("#dashboard-status");
@@ -84,40 +81,7 @@ function getToastContainer() {
   return document.querySelector("#toast-container");
 }
 
-const activityMessages = {
-  project_created: "Project created",
-  project_updated: "Project updated",
-  task_created: "Task created",
-  task_updated: "Task updated",
-  task_completed: "Task completed",
-  note_created: "Note created",
-  note_updated: "Note updated",
-};
 
-function transformActivity(activity) {
-  return {
-    id: activity.id,
-    message: activityMessages[activity.type],
-    entityType: activity.entityType,
-    entityId: activity.entityId,
-    createdAt: activity.createdAt,
-  };
-}
-
-function transformActivities(activities) {
-  return activities.map(transformActivity);
-}
-
-function getRecentActivities(activities, limit = 5) {
-  return activities
-    .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, limit);
-}
-
-function getDashboardRecentActivities(activities) {
-  return transformActivities(getRecentActivities(activities, 5));
-}
 
 function renderRecentActivities(activities) {
   const listElement = getRecentActivityListElement();
@@ -197,33 +161,6 @@ function renderRecentActivitiesRefreshState(isRefreshing) {
   }
 }
 
-// Fetch Data From Server
-async function getRaviVerseData() {
-  await delay(3000);
-  let response;
-  try {
-    response = await fetch("../data/raviverse.json");
-  } catch (networkError) {
-    throw new Error("Network failure: Unable to fetch RaviVerse data.", {
-      cause: networkError,
-    });
-  }
-  if (!response.ok) {
-    throw new Error(`HTTP failure: Server returned ${response.status}.`, {
-      cause: new Error(response.statusText || "Unknown HTTP error"),
-    });
-  }
-  let data;
-  try {
-    data = await response.json();
-  } catch (jsonError) {
-    throw new Error("Data parsing failure: Invalid RaviVerse JSON.", {
-      cause: jsonError,
-    });
-  }
-
-  return validateRaviVerseData(data);
-}
 // Calculate dashboard statistics
 function calculateDashboardStats(raviVerseData) {
   const taskStats = raviVerseData.tasks.reduce(
