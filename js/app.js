@@ -74,6 +74,13 @@ function getDashboardRefreshElement() {
   return document.querySelector("#dashboard-refresh");
 }
 
+// Get toast container
+let currentToast = null;
+let currentToastTimer = null;
+function getToastContainer() {
+  return document.querySelector("#toast-container");
+}
+
 // Validate Our API response
 function validateRaviVerseData(data) {
   if (!data) {
@@ -179,7 +186,7 @@ function validateNote(note, index) {
 
 // Fetch Data From Server
 async function getRaviVerseData() {
-  await delay(2000);
+  await delay(3000);
   let response;
   try {
     response = await fetch("../data/raviverse.json");
@@ -273,13 +280,16 @@ function createDashboardStore(initialState) {
     },
   };
 }
-//UI State Management
-function renderDashboardState(state) {
+
+//Orchestrator for UI rendering
+function renderDashboardState(state, successMessage) {
   const statusElement = getDashboardStatusElement();
   const refreshButton = getDashboardRefreshElement();
+
   if (refreshButton) {
     refreshButton.disabled = state.status === "loading";
   }
+  renderDashboardLoadingState(state, dashboardStatCards);
   if (!statusElement) return;
   switch (state.status) {
     case "idle":
@@ -290,25 +300,29 @@ function renderDashboardState(state) {
       break;
     case "success":
       statusElement.textContent = "Dashboard loaded.";
-      renderDashboardStats(state.data, getDashboardStatElements());
+      renderDashboardStats(state.data, dashboardStatElements);
+      if (successMessage) {
+        showToast(successMessage, "success");
+      }
       break;
     case "error":
       statusElement.textContent = "Failed to load dashboard. Please try again.";
+      showToast("Failed to load dashboard. Please try again.", "error");
       break;
   }
 }
 
 // Small Orchestration Helper
-function transitionDashboard(store, status, data, error) {
+function transitionDashboard(store, status, data, error, successMessage) {
   const nextState = store.setState(status, data, error);
-  renderDashboardState(nextState);
+  renderDashboardState(nextState, successMessage);
 }
 
-async function loadDashboard(store) {
+async function loadDashboard(store, successMessage) {
   try {
     transitionDashboard(store, "loading");
     const dashboardData = await getDashboardData();
-    transitionDashboard(store, "success", dashboardData);
+    transitionDashboard(store, "success", dashboardData, null, successMessage);
     return store.getState();
   } catch (error) {
     if (error.cause) {
@@ -321,7 +335,7 @@ async function loadDashboard(store) {
 }
 
 function refreshDashboard() {
-  return loadDashboard(dashboardStore);
+  return loadDashboard(dashboardStore, "Dashboard refreshed.");
 }
 
 //Dashboard Event Listeners
@@ -331,17 +345,107 @@ function setupDashboardEvents() {
   refreshButton.addEventListener("click", refreshDashboard);
 }
 
+// Get dashboard cards
+function getDashboardStatCards() {
+  const statElements = getDashboardStatElements();
+  return Object.fromEntries(
+    Object.entries(statElements).map(([key, element]) => [
+      key,
+      element.parentElement,
+    ]),
+  );
+}
+
+// Manage loading visuals
+function renderDashboardLoadingState(state, statCards) {
+  Object.values(statCards).forEach((card) => {
+    switch (state.status) {
+      case "loading":
+        if (state.data !== null) {
+          card.classList.add("is-refreshing");
+          card.classList.remove("is-loading");
+        } else {
+          card.classList.add("is-loading");
+          card.classList.remove("is-refreshing");
+        }
+        break;
+      default:
+        card.classList.remove("is-loading", "is-refreshing");
+        break;
+    }
+  });
+}
+
+// Toast System
+function showToast(message, type) {
+  const toastContainer = getToastContainer();
+  if (currentToastTimer) {
+    clearTimeout(currentToastTimer);
+    currentToastTimer = null;
+  }
+  if (currentToast) {
+    currentToast.remove();
+    currentToast = null;
+  }
+  const duration = type === "success" ? 3000 : 5000;
+  currentToast = document.createElement("div");
+  currentToast.textContent = message;
+  currentToast.classList.add("toast", `toast-${type}`);
+  toastContainer.append(currentToast);
+  const targetToast = currentToast;
+  currentToastTimer = setTimeout(() => {
+    removeToastWithAnimation(targetToast);
+  }, duration);
+}
+function removeToastWithAnimation(toast) {
+  if (!toast || !toast.isConnected) {
+    cleanupToastState(toast);
+    return;
+  }
+  if (currentToastTimer) {
+    clearTimeout(currentToastTimer);
+    currentToastTimer = null;
+  }
+  toast.classList.add("toast-exit");
+  const computedStyle = window.getComputedStyle(toast);
+  const hasAnimation =
+    computedStyle.animationName !== "none" &&
+    parseFloat(computedStyle.animationDuration) > 0;
+  let isCleanedUp = false;
+  const performRemoval = () => {
+    if (isCleanedUp) return;
+    isCleanedUp = true;
+    toast.remove();
+    cleanupToastState(toast);
+  };
+
+  if (hasAnimation) {
+    toast.addEventListener("animationend", performRemoval, { once: true });
+    const durationMs =
+      (parseFloat(computedStyle.animationDuration) || 0) * 1000;
+    setTimeout(performRemoval, durationMs + 100);
+  } else {
+    performRemoval();
+  }
+}
+function cleanupToastState(toast) {
+  if (currentToast === toast) {
+    currentToast = null;
+    currentToastTimer = null;
+  }
+}
+
 const initialDashboardState = {
   status: "idle",
   data: null,
   error: null,
 };
-
 const dashboardStore = createDashboardStore(initialDashboardState);
-
+const dashboardStatElements = getDashboardStatElements();
+const dashboardStatCards = getDashboardStatCards();
 // Dashboard Orchestration Initialization
 function initDashboard() {
-  return loadDashboard(dashboardStore);
+  return loadDashboard(dashboardStore, "Dashboard loaded.");
 }
 
 setupDashboardEvents();
