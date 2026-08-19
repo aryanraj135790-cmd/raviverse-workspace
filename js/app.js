@@ -1,5 +1,5 @@
 import { getDashboardData } from "./dashboard/dashboard-data.js";
-import { createDashboardStore } from "./dashboard/dashboard-data.js";
+import { createDashboardStore } from "./dashboard/dashboard-store.js";
 // Format numbers
 function formatStatNumber(num) {
   if (typeof num !== "number" || !Number.isFinite(num)) {
