@@ -26,11 +26,8 @@ function handleDashboardToast(state, successMessage) {
   }
 }
 function renderDashboardState(state, successMessage) {
-  const statusElement = getDashboardStatusElement();
-  const refreshButton = getDashboardRefreshElement();
-
-  if (refreshButton) {
-    refreshButton.disabled = state.status === "loading";
+  if (dashboardRefreshElement) {
+    dashboardRefreshElement.disabled = state.status === "loading";
   }
   renderDashboardLoadingState(state, dashboardStatCards);
   renderRecentActivitiesLoadingState(
@@ -41,7 +38,7 @@ function renderDashboardState(state, successMessage) {
     state.status === "loading" && state.data !== null,
     recentActivityListElement,
   );
-  renderDashboardStatusMessage(statusElement, state.status);
+  renderDashboardStatusMessage(dashboardStatusElement, state.status);
   if (state.status === "success") {
     renderDashboardStats(state.data.stats, dashboardStatElements);
     renderRecentActivities(
@@ -74,9 +71,8 @@ function refreshDashboard() {
   return loadDashboard(dashboardStore, "Dashboard refreshed.");
 }
 function setupDashboardEvents() {
-  const refreshButton = getDashboardRefreshElement();
-  if (!refreshButton) return;
-  refreshButton.addEventListener("click", refreshDashboard);
+  if (!dashboardRefreshElement) return;
+  dashboardRefreshElement.addEventListener("click", refreshDashboard);
 }
 function initDashboard() {
   return loadDashboard(dashboardStore, "Dashboard loaded.");
@@ -87,6 +83,8 @@ const initialDashboardState = {
   error: null,
 };
 const dashboardStore = createDashboardStore(initialDashboardState);
+const dashboardStatusElement = getDashboardStatusElement();
+const dashboardRefreshElement = getDashboardRefreshElement();
 const dashboardStatElements = getDashboardStatElements();
 const dashboardStatCards = getDashboardStatCards();
 const recentActivityListElement = getRecentActivityListElement();
