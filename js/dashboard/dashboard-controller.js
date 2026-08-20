@@ -4,6 +4,7 @@ import {
   getDashboardRefreshElement,
   getDashboardStatElements,
   getDashboardStatCards,
+  getRecentActivityListElement,
 } from "./dashboard-dom.js";
 import {
   renderDashboardStats,
@@ -34,14 +35,19 @@ function renderDashboardState(state, successMessage) {
   renderDashboardLoadingState(state, dashboardStatCards);
   renderRecentActivitiesLoadingState(
     state.status === "loading" && state.data === null,
+    recentActivityListElement,
   );
   renderRecentActivitiesRefreshState(
     state.status === "loading" && state.data !== null,
+    recentActivityListElement,
   );
   renderDashboardStatusMessage(statusElement, state.status);
   if (state.status === "success") {
     renderDashboardStats(state.data.stats, dashboardStatElements);
-    renderRecentActivities(state.data.recentActivities);
+    renderRecentActivities(
+      state.data.recentActivities,
+      recentActivityListElement,
+    );
   }
   handleDashboardToast(state, successMessage);
 }
@@ -83,6 +89,8 @@ const initialDashboardState = {
 const dashboardStore = createDashboardStore(initialDashboardState);
 const dashboardStatElements = getDashboardStatElements();
 const dashboardStatCards = getDashboardStatCards();
+const recentActivityListElement = getRecentActivityListElement();
+
 export {
   handleDashboardToast,
   renderDashboardState,
