@@ -1,5 +1,12 @@
 import { getDashboardData } from "./dashboard/dashboard-data.js";
 import { createDashboardStore } from "./dashboard/dashboard-store.js";
+import {
+  getDashboardStatusElement,
+  getDashboardRefreshElement,
+  getRecentActivityListElement,
+  getDashboardStatElements,
+  getDashboardStatCards,
+} from "./dashboard/dashboard-dom.js";
 // Format numbers
 function formatStatNumber(num) {
   if (typeof num !== "number" || !Number.isFinite(num)) {
@@ -42,36 +49,6 @@ function renderDashboardStats(data, elementsMap) {
       );
     }
   });
-}
-
-// Get Dashboard Stats
-function getDashboardStatElements() {
-  const dashboardStatElements = document.querySelectorAll(
-    "[data-dashboard-stat]",
-  );
-  return Array.from(dashboardStatElements).reduce(
-    (accumulator, currentElement) => {
-      const statKey = currentElement.getAttribute("data-dashboard-stat");
-      accumulator[statKey] = currentElement;
-      return accumulator;
-    },
-    {},
-  );
-}
-
-// Get dashboard status element
-function getDashboardStatusElement() {
-  return document.querySelector("#dashboard-status");
-}
-
-// Get dashboard refresh element
-function getDashboardRefreshElement() {
-  return document.querySelector("#dashboard-refresh");
-}
-
-// Recent Activity List Element
-function getRecentActivityListElement() {
-  return document.querySelector("#recent-activity-list");
 }
 
 // Get toast container
@@ -228,17 +205,6 @@ function setupDashboardEvents() {
   const refreshButton = getDashboardRefreshElement();
   if (!refreshButton) return;
   refreshButton.addEventListener("click", refreshDashboard);
-}
-
-// Get dashboard cards
-function getDashboardStatCards() {
-  const statElements = getDashboardStatElements();
-  return Object.fromEntries(
-    Object.entries(statElements).map(([key, element]) => [
-      key,
-      element.parentElement,
-    ]),
-  );
 }
 
 // Manage loading visuals
