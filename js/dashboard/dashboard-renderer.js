@@ -1,4 +1,3 @@
-import { getRecentActivityListElement } from "./dashboard-dom.js";
 // Formatting helpers
 function formatStatNumber(num) {
   if (typeof num !== "number" || !Number.isFinite(num)) {
@@ -99,8 +98,7 @@ function renderDashboardStatusMessage(statusElement, status) {
 }
 
 // Recent activity rendering
-function renderRecentActivities(activities) {
-  const listElement = getRecentActivityListElement();
+function renderRecentActivities(activities, listElement) {
   if (!listElement) return;
   listElement.replaceChildren();
   if (activities.length === 0) {
@@ -126,8 +124,7 @@ function renderRecentActivities(activities) {
     listElement.appendChild(li);
   });
 }
-function renderRecentActivitiesLoadingState(isLoading) {
-  const listElement = getRecentActivityListElement();
+function renderRecentActivitiesLoadingState(isLoading, listElement) {
   if (!listElement) return;
   if (isLoading) {
     listElement.replaceChildren();
@@ -145,11 +142,8 @@ function renderRecentActivitiesLoadingState(isLoading) {
     }
   }
 }
-function renderRecentActivitiesRefreshState(isRefreshing) {
-  const listElement = getRecentActivityListElement();
-
+function renderRecentActivitiesRefreshState(isRefreshing, listElement) {
   if (!listElement) return;
-
   if (isRefreshing) {
     listElement.classList.add("is-refreshing");
   } else {
