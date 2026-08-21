@@ -35,7 +35,7 @@ function validateTask(task, index) {
     (task.status !== "completed" && task.status !== "pending")
   ) {
     throw new Error(
-      `Invalid task at index ${index}: 'id' must be a positive integer, 'title' must be a non-empty string, and 'status' must be "completed" or "pending".`,
+      `Invalid task at index ${index}: 'id' must be a positive integer, 'title' must be a non-empty string, and 'status' must be 'completed' or 'pending'.`,
     );
   }
 }

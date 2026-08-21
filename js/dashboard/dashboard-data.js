@@ -36,4 +36,4 @@ async function getDashboardData() {
   };
 }
 
-export { getDashboardData };
+export { getDashboardData, calculateDashboardStats };
