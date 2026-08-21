@@ -1,0 +1,25 @@
+{
+  "name": "raviverse-workspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryanraj135790-cmd/raviverse-workspace.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aryanraj135790-cmd/raviverse-workspace/issues"
+  },
+  "homepage": "https://github.com/aryanraj135790-cmd/raviverse-workspace#readme",
+  "type": "module",
+  "devDependencies": {
+    "jsdom": "^30.0.1",
+    "vitest": "^4.1.11"
+  }
+}
