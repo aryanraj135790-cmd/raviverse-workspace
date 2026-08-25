@@ -67,6 +67,7 @@ describe("initializeAuth", () => {
       status: "unauthenticated",
       session,
       user: null,
+      mode: "login",
     });
   });
   it("should update auth state when the auth state changes", async () => {
@@ -147,6 +148,7 @@ describe("initializeAuth", () => {
       status: "unauthenticated",
       session: null,
       user: null,
+      mode: "login",
     });
   });
   it("should report an unauthenticated state when initial session retrieval fails", async () => {
@@ -174,6 +176,7 @@ describe("initializeAuth", () => {
       status: "unauthenticated",
       session: null,
       user: null,
+      mode: "login",
     });
   });
   it("should unsubscribe from auth state changes when cleanup is called", async () => {
@@ -200,5 +203,32 @@ describe("initializeAuth", () => {
     expect(onStateChange).toHaveBeenCalledTimes(1);
     cleanup();
     expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+  it("should report login mode when no initial session exists", async () => {
+    getSession.mockResolvedValue({
+      data: {
+        session: null,
+      },
+      error: null,
+    });
+
+    onAuthStateChange.mockReturnValue({
+      data: {
+        subscription: {
+          unsubscribe: vi.fn(),
+        },
+      },
+    });
+
+    const onStateChange = vi.fn();
+
+    await initializeAuth(onStateChange);
+
+    expect(onStateChange).toHaveBeenLastCalledWith({
+      status: "unauthenticated",
+      mode: "login",
+      session: null,
+      user: null,
+    });
   });
 });

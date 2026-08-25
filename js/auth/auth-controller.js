@@ -1,11 +1,20 @@
 import { getSession, onAuthStateChange } from "../supabase/auth.js";
 
 function createAuthState(session) {
-  return {
+  const baseState = {
     status: session ? "authenticated" : "unauthenticated",
     session: session ?? null,
     user: session?.user ?? null,
   };
+
+  if (!session) {
+    return {
+      ...baseState,
+      mode: "login",
+    };
+  }
+
+  return baseState;
 }
 
 export async function initializeAuth(onStateUpdate) {

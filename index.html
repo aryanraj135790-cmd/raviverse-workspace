@@ -15,10 +15,11 @@
       <a href="/">RaviVerse Workspace</a>
       <div>
         <button type="button">Search</button>
-        <button type="button">Profile</button>
+        <button id="profile-button" type="button">Profile</button>
       </div>
     </header>
-    <div class="content-wrapper">
+    <main id="auth-view"></main>
+    <div id="workspace-view" class="content-wrapper" hidden>
       <aside>
         <nav aria-label="Main menu">
           <ul>
@@ -31,7 +32,7 @@
           </ul>
         </nav>
       </aside>
-      <main>
+      <section id="dashboard-view">
         <div class="main-content">
           <header>
             <div>
@@ -81,7 +82,7 @@
             <ul id="recent-activity-list" class="recent-activity-list"></ul>
           </section>
         </div>
-      </main>
+      </section>
     </div>
     <div id="toast-container" aria-live="polite"></div>
     <!-- Scrips -->
