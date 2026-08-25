@@ -57,10 +57,7 @@ export function setupAuthOperation(form, mode = "login") {
 
   const unsubscribe = authStore.subscribe((state) => {
     renderAuthView(authView, state);
-
-    if (state.status === "idle") {
-      setupCurrentForm();
-    }
+    setupCurrentForm();
   });
 
   return unsubscribe;
