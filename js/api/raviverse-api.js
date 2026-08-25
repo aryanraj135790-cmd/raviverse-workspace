@@ -5,7 +5,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Fetch Data From Server
 async function getRaviVerseData() {
-  await delay(3000);
+  // await delay(3000);
   let response;
   try {
     response = await fetch("../data/raviverse.json");
