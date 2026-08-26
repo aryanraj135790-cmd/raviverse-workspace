@@ -36,11 +36,13 @@ const {
   showToast: vi.fn(),
 }));
 vi.mock("../../js/dashboard/dashboard-dom.js", () => ({
-  getDashboardStatusElement: () => dashboardStatusElement,
-  getDashboardRefreshElement: () => dashboardRefreshElement,
-  getDashboardStatElements: () => dashboardStatElements,
-  getDashboardStatCards: () => dashboardStatCards,
-  getRecentActivityListElement: () => recentActivityListElement,
+  getDashboardDom: () => ({
+    status: dashboardStatusElement,
+    refresh: dashboardRefreshElement,
+    statElements: dashboardStatElements,
+    statCards: dashboardStatCards,
+    recentActivityList: recentActivityListElement,
+  }),
 }));
 vi.mock("../../js/dashboard/dashboard-renderer.js", () => ({
   renderDashboardStats,

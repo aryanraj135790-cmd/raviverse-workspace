@@ -18,6 +18,13 @@ vi.mock("../../js/dashboard/dashboard-dom.js", () => ({
   getDashboardStatElements: () => ({}),
   getDashboardStatCards: () => ({}),
   getRecentActivityListElement: () => document.createElement("ul"),
+  getDashboardDom: () => ({
+    status: document.createElement("p"),
+    refresh: dashboardRefreshElement,
+    statElements: {},
+    statCards: {},
+    recentActivityList: document.createElement("ul"),
+  }),
 }));
 
 vi.mock("../../js/dashboard/dashboard-data.js", () => ({
@@ -36,6 +43,11 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Provide the containers that initDashboard/createDashboardView rely on.
+  document.body.innerHTML = `
+    <main id="app-view"></main>
+    <div id="toast-container" aria-live="polite"></div>
+  `;
 });
 describe("setupDashboardEvents", () => {
   it("should register a click event listener on the dashboard refresh button", () => {
