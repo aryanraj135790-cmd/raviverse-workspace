@@ -58,7 +58,10 @@ function transitionDashboard(store, status, data, error, successMessage) {
   renderDashboardState(nextState, successMessage);
 }
 
+let latestRequestId = 0;
+
 async function loadDashboard(store, successMessage) {
+  const requestId = ++latestRequestId;
   try {
     const currentState = store.getState();
 
@@ -66,10 +69,15 @@ async function loadDashboard(store, successMessage) {
 
     const dashboardData = await getDashboardData();
 
+    // stale response — discarded silently
+    if (requestId !== latestRequestId) return;
+
     transitionDashboard(store, "success", dashboardData, null, successMessage);
 
     return store.getState();
   } catch (error) {
+    if (requestId !== latestRequestId) return;
+
     if (error.cause) {
       console.error("Original System Error Details:", error.cause);
     }
