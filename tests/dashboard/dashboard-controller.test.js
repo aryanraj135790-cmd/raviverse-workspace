@@ -4,7 +4,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDashboardStore } from "../../js/dashboard/dashboard-store.js";
 import { getDashboardData } from "../../js/dashboard/dashboard-data.js";
-import { loadDashboard ,handleDashboardToast} from "../../js/dashboard/dashboard-controller.js";
+import {
+  loadDashboard,
+  handleDashboardToast,
+} from "../../js/dashboard/dashboard-controller.js";
 vi.mock("../../js/dashboard/dashboard-data.js", () => ({
   getDashboardData: vi.fn(),
 }));
@@ -98,5 +101,48 @@ describe("loadDashboard", () => {
     );
 
     consoleErrorSpy.mockRestore();
+  });
+  it("should keep fresh data when an earlier request resolves out of order", async () => {
+    const store = createDashboardStore({
+      status: "idle",
+      data: null,
+      error: null,
+    });
+
+    const staleData = {
+      stats: { projects: 1, tasks: 1 },
+      recentActivities: ["stale activity"],
+    };
+
+    const freshData = {
+      stats: { projects: 99, tasks: 99 },
+      recentActivities: ["fresh activity"],
+    };
+
+    let lateResolve;
+    const latePromise = new Promise((resolve) => {
+      lateResolve = resolve;
+    });
+
+    getDashboardData
+      .mockReturnValueOnce(latePromise)
+      .mockResolvedValueOnce(freshData);
+
+    const firstLoadPromise = loadDashboard(store, "First request");
+
+    await Promise.resolve();
+
+    await loadDashboard(store, "Second request");
+
+    expect(store.getState().data).toEqual(freshData);
+    expect(store.getState().status).toBe("success");
+
+    lateResolve(staleData);
+    await firstLoadPromise;
+
+    await Promise.resolve();
+
+    expect(store.getState().data).toEqual(freshData);
+    expect(store.getState().status).toBe("success");
   });
 });
