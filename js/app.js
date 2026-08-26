@@ -8,5 +8,7 @@ import { setupAuthUI } from "./auth/auth-ui-controller.js";
 
 initializeAuth(handleAuthState);
 setupAuthUI();
-setupDashboardEvents();
+// The dashboard view must be created (and DOM refs re-captured) before
+// binding events, otherwise the refresh button does not exist yet.
 initDashboard();
+setupDashboardEvents();

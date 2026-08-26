@@ -37,6 +37,17 @@ function getDashboardStatCards() {
     ]),
   );
 }
+
+// Get all Dashboard DOM references
+export function getDashboardDom() {
+  return {
+    status: getDashboardStatusElement(),
+    refresh: getDashboardRefreshElement(),
+    statElements: getDashboardStatElements(),
+    statCards: getDashboardStatCards(),
+    recentActivityList: getRecentActivityListElement(),
+  };
+}
 export {
   getDashboardStatusElement,
   getDashboardRefreshElement,

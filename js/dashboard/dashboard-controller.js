@@ -1,11 +1,5 @@
 import { showToast } from "../ui/toast.js";
-import {
-  getDashboardStatusElement,
-  getDashboardRefreshElement,
-  getDashboardStatElements,
-  getDashboardStatCards,
-  getRecentActivityListElement,
-} from "./dashboard-dom.js";
+import { getDashboardDom } from "./dashboard-dom.js";
 import {
   renderDashboardStats,
   renderDashboardLoadingState,
@@ -16,6 +10,8 @@ import {
 } from "./dashboard-renderer.js";
 import { getDashboardData } from "./dashboard-data.js";
 import { createDashboardStore } from "./dashboard-store.js";
+import { createDashboardView } from "./dashboard-view.js";
+
 function handleDashboardToast(state, successMessage) {
   if (state.status === "success" && successMessage) {
     showToast(successMessage, "success");
@@ -25,69 +21,97 @@ function handleDashboardToast(state, successMessage) {
     showToast("Failed to load dashboard. Please try again.", "error");
   }
 }
+
 function renderDashboardState(state, successMessage) {
-  if (dashboardRefreshElement) {
-    dashboardRefreshElement.disabled = state.status === "loading";
+  if (dashboardDom.refresh) {
+    dashboardDom.refresh.disabled = state.status === "loading";
   }
-  renderDashboardLoadingState(state, dashboardStatCards);
+
+  renderDashboardLoadingState(state, dashboardDom.statCards);
+
   renderRecentActivitiesLoadingState(
     state.status === "loading" && state.data === null,
-    recentActivityListElement,
+    dashboardDom.recentActivityList,
   );
+
   renderRecentActivitiesRefreshState(
     state.status === "loading" && state.data !== null,
-    recentActivityListElement,
+    dashboardDom.recentActivityList,
   );
-  renderDashboardStatusMessage(dashboardStatusElement, state.status);
+
+  renderDashboardStatusMessage(dashboardDom.status, state.status);
+
   if (state.status === "success") {
-    renderDashboardStats(state.data.stats, dashboardStatElements);
+    renderDashboardStats(state.data.stats, dashboardDom.statElements);
+
     renderRecentActivities(
       state.data.recentActivities,
-      recentActivityListElement,
+      dashboardDom.recentActivityList,
     );
   }
+
   handleDashboardToast(state, successMessage);
 }
+
 function transitionDashboard(store, status, data, error, successMessage) {
   const nextState = store.setState(status, data, error);
   renderDashboardState(nextState, successMessage);
 }
+
 async function loadDashboard(store, successMessage) {
   try {
-    transitionDashboard(store, "loading");
+    const currentState = store.getState();
+
+    transitionDashboard(store, "loading", currentState.data, null);
+
     const dashboardData = await getDashboardData();
+
     transitionDashboard(store, "success", dashboardData, null, successMessage);
+
     return store.getState();
   } catch (error) {
     if (error.cause) {
       console.error("Original System Error Details:", error.cause);
     }
+
     console.error("Dashboard Init Failed ->", error.message);
+
     transitionDashboard(store, "error", null, error);
+
     return store.getState();
   }
 }
+
 function refreshDashboard() {
   return loadDashboard(dashboardStore, "Dashboard refreshed.");
 }
+
 function setupDashboardEvents() {
-  if (!dashboardRefreshElement) return;
-  dashboardRefreshElement.addEventListener("click", refreshDashboard);
+  if (!dashboardDom.refresh) return;
+  dashboardDom.refresh.addEventListener("click", refreshDashboard);
 }
+
 function initDashboard() {
+  const appView = document.querySelector("#app-view");
+  if (!appView) {
+    console.error("Critical: #app-view container was not found in the DOM.");
+    return;
+  }
+
+  const dashboardView = createDashboardView();
+  appView.replaceChildren(dashboardView);
+  dashboardDom = getDashboardDom();
+
   return loadDashboard(dashboardStore, "Dashboard loaded.");
 }
+
+let dashboardDom = getDashboardDom();
 const initialDashboardState = {
   status: "idle",
   data: null,
   error: null,
 };
 const dashboardStore = createDashboardStore(initialDashboardState);
-const dashboardStatusElement = getDashboardStatusElement();
-const dashboardRefreshElement = getDashboardRefreshElement();
-const dashboardStatElements = getDashboardStatElements();
-const dashboardStatCards = getDashboardStatCards();
-const recentActivityListElement = getRecentActivityListElement();
 
 export {
   handleDashboardToast,
