@@ -1,14 +1,17 @@
 import {
-  setupDashboardEvents,
+  destroyDashboard,
   initDashboard,
 } from "./dashboard/dashboard-controller.js";
 import { initializeAuth } from "./auth/auth-controller.js";
 import { handleAuthState } from "./auth/auth-state-handler.js";
 import { setupAuthUI } from "./auth/auth-ui-controller.js";
+import { initRouter, registerRoute } from "./router/router.js";
 
 initializeAuth(handleAuthState);
 setupAuthUI();
-// The dashboard view must be created (and DOM refs re-captured) before
-// binding events, otherwise the refresh button does not exist yet.
-initDashboard();
-setupDashboardEvents();
+registerRoute("#/dashboard", {
+  mount: initDashboard,
+  destroy: destroyDashboard,
+});
+
+initRouter("#/dashboard");

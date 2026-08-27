@@ -12,6 +12,25 @@ import { getDashboardData } from "./dashboard-data.js";
 import { createDashboardStore } from "./dashboard-store.js";
 import { createDashboardView } from "./dashboard-view.js";
 
+// Module State for Shared Lifecycle (Setup/Teardown)
+let dashboardDom = null;
+let latestRequestId = 0;
+
+const initialDashboardState = {
+  status: "idle",
+  data: null,
+  error: null,
+};
+
+const dashboardStore = createDashboardStore(initialDashboardState);
+
+// --- Toast & UI Render Handlers (Dependency Injected) ---
+
+// Lazy resolver: prefer mounted refs, fall back to a fresh DOM query
+function resolveDashboardDom(dom = null) {
+  return dom ?? dashboardDom ?? getDashboardDom();
+}
+
 function handleDashboardToast(state, successMessage) {
   if (state.status === "success" && successMessage) {
     showToast(successMessage, "success");
@@ -22,57 +41,82 @@ function handleDashboardToast(state, successMessage) {
   }
 }
 
-function renderDashboardState(state, successMessage) {
-  if (dashboardDom.refresh) {
-    dashboardDom.refresh.disabled = state.status === "loading";
+function renderDashboardState(
+  state,
+  successMessage,
+  dom = resolveDashboardDom(),
+) {
+  // If no DOM refs are provided or mounted, skip visual renders gracefully
+  if (!dom) return;
+
+  if (dom.refresh) {
+    dom.refresh.disabled = state.status === "loading";
   }
 
-  renderDashboardLoadingState(state, dashboardDom.statCards);
+  renderDashboardLoadingState(state, dom.statCards);
 
   renderRecentActivitiesLoadingState(
     state.status === "loading" && state.data === null,
-    dashboardDom.recentActivityList,
+    dom.recentActivityList,
   );
 
   renderRecentActivitiesRefreshState(
     state.status === "loading" && state.data !== null,
-    dashboardDom.recentActivityList,
+    dom.recentActivityList,
   );
 
-  renderDashboardStatusMessage(dashboardDom.status, state.status);
+  renderDashboardStatusMessage(dom.status, state.status);
 
   if (state.status === "success") {
-    renderDashboardStats(state.data.stats, dashboardDom.statElements);
+    renderDashboardStats(state.data.stats, dom.statElements);
 
-    renderRecentActivities(
-      state.data.recentActivities,
-      dashboardDom.recentActivityList,
-    );
+    renderRecentActivities(state.data.recentActivities, dom.recentActivityList);
   }
 
   handleDashboardToast(state, successMessage);
 }
 
-function transitionDashboard(store, status, data, error, successMessage) {
+function transitionDashboard(
+  store,
+  status,
+  data,
+  error,
+  successMessage,
+  dom = resolveDashboardDom(),
+) {
   const nextState = store.setState(status, data, error);
-  renderDashboardState(nextState, successMessage);
+  renderDashboardState(nextState, successMessage, dom);
 }
 
-let latestRequestId = 0;
+// --- Data & Lifecycle Handlers ---
 
-async function loadDashboard(store, successMessage) {
+async function loadDashboard(store, successMessage, dom = resolveDashboardDom()) {
   const requestId = ++latestRequestId;
   try {
     const currentState = store.getState();
 
-    transitionDashboard(store, "loading", currentState.data, null);
+    transitionDashboard(
+      store,
+      "loading",
+      currentState.data,
+      null,
+      undefined,
+      dom,
+    );
 
     const dashboardData = await getDashboardData();
 
-    // stale response — discarded silently
+    // Guard against stale closure / race condition
     if (requestId !== latestRequestId) return;
 
-    transitionDashboard(store, "success", dashboardData, null, successMessage);
+    transitionDashboard(
+      store,
+      "success",
+      dashboardData,
+      null,
+      successMessage,
+      dom,
+    );
 
     return store.getState();
   } catch (error) {
@@ -84,7 +128,7 @@ async function loadDashboard(store, successMessage) {
 
     console.error("Dashboard Init Failed ->", error.message);
 
-    transitionDashboard(store, "error", null, error);
+    transitionDashboard(store, "error", null, error, undefined, dom);
 
     return store.getState();
   }
@@ -95,8 +139,25 @@ function refreshDashboard() {
 }
 
 function setupDashboardEvents() {
-  if (!dashboardDom.refresh) return;
-  dashboardDom.refresh.addEventListener("click", refreshDashboard);
+  const dom = resolveDashboardDom();
+  if (!dom?.refresh) return;
+
+  // Idempotent binding: remove first so re-mounts never double-bind
+  dom.refresh.removeEventListener("click", refreshDashboard);
+  dom.refresh.addEventListener("click", refreshDashboard);
+}
+
+function destroyDashboard() {
+  if (dashboardDom?.refresh) {
+    dashboardDom.refresh.removeEventListener("click", refreshDashboard);
+  }
+
+  const appView = document.querySelector("#app-view");
+  if (appView) {
+    appView.replaceChildren();
+  }
+
+  dashboardDom = null;
 }
 
 function initDashboard() {
@@ -106,20 +167,19 @@ function initDashboard() {
     return;
   }
 
+  // 1. Compose & Mount View
   const dashboardView = createDashboardView();
   appView.replaceChildren(dashboardView);
+
+  // 2. Resolve DOM References
   dashboardDom = getDashboardDom();
 
-  return loadDashboard(dashboardStore, "Dashboard loaded.");
-}
+  // 3. Bind Events
+  setupDashboardEvents();
 
-let dashboardDom = getDashboardDom();
-const initialDashboardState = {
-  status: "idle",
-  data: null,
-  error: null,
-};
-const dashboardStore = createDashboardStore(initialDashboardState);
+  // 4. Load Data with resolved DOM refs
+  return loadDashboard(dashboardStore, "Dashboard loaded.", dashboardDom);
+}
 
 export {
   handleDashboardToast,
@@ -129,4 +189,5 @@ export {
   refreshDashboard,
   setupDashboardEvents,
   initDashboard,
+  destroyDashboard,
 };
