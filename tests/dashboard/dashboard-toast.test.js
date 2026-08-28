@@ -8,6 +8,11 @@ import { showToast } from "../../js/ui/toast.js";
 vi.mock("../../js/ui/toast.js", () => ({
   showToast: vi.fn(),
 }));
+// The controller transitively imports the Supabase data layer (whose
+// client.js loads a browser-only CDN URL) — mock at the vendor boundary.
+vi.mock("../../js/supabase/dashboard-queries.js", () => ({
+  fetchDashboardRawData: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();

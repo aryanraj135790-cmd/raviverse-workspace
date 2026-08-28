@@ -167,17 +167,17 @@ function initDashboard() {
     return;
   }
 
-  // 1. Compose & Mount View
+  // Compose & Mount View
   const dashboardView = createDashboardView();
   appView.replaceChildren(dashboardView);
 
-  // 2. Resolve DOM References
+  // Resolve DOM References
   dashboardDom = getDashboardDom();
 
-  // 3. Bind Events
+  // Bind Events
   setupDashboardEvents();
 
-  // 4. Load Data with resolved DOM refs
+  // Load Data with resolved DOM refs
   return loadDashboard(dashboardStore, "Dashboard loaded.", dashboardDom);
 }
 
