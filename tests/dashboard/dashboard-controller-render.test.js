@@ -55,6 +55,11 @@ vi.mock("../../js/dashboard/dashboard-renderer.js", () => ({
 vi.mock("../../js/ui/toast.js", () => ({
   showToast,
 }));
+// The controller transitively imports the Supabase data layer (whose
+// client.js loads a browser-only CDN URL) — mock at the vendor boundary.
+vi.mock("../../js/supabase/dashboard-queries.js", () => ({
+  fetchDashboardRawData: vi.fn(),
+}));
 import {
   renderDashboardState,
   transitionDashboard,

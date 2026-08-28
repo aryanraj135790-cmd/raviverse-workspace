@@ -1,4 +1,4 @@
-import { getRaviVerseData } from "../api/raviverse-api.js";
+import { fetchDashboardRawData } from "../supabase/dashboard-queries.js";
 import { getDashboardRecentActivities } from "../transformation/activity-transformer.js";
 
 // Calculate dashboard statistics
@@ -8,7 +8,9 @@ function calculateDashboardStats(raviVerseData) {
       totalTasks: acc.totalTasks + 1,
       completedTasks:
         acc.completedTasks + (curr.status === "completed" ? 1 : 0),
-      pendingTasks: acc.pendingTasks + (curr.status === "pending" ? 1 : 0),
+      pendingTasks:
+        acc.pendingTasks +
+        (curr.status === "todo" || curr.status === "in_progress" ? 1 : 0),
     }),
     {
       totalTasks: 0,
@@ -27,7 +29,8 @@ function calculateDashboardStats(raviVerseData) {
 }
 // Get and transform dashboard data
 async function getDashboardData() {
-  const raviVerseData = await getRaviVerseData();
+  const raviVerseData = await fetchDashboardRawData();
+
   return {
     stats: calculateDashboardStats(raviVerseData),
     recentActivities: getDashboardRecentActivities(

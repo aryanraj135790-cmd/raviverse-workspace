@@ -11,9 +11,12 @@ const activityMessages = {
 function transformActivity(activity) {
   return {
     id: activity.id,
-    message: activityMessages[activity.type],
+    type: activity.type,
+    message: activityMessages[activity.type] ?? activity.type,
     entityType: activity.entityType,
     entityId: activity.entityId,
+    entityName: activity.entityName,
+    deprecated: activity.deprecated ?? false,
     createdAt: activity.createdAt,
   };
 }
