@@ -1,6 +1,6 @@
 import { supabase } from "./client.js";
 
-export function mapProject(row) {
+function mapProject(row) {
   if (!row) return null;
   return {
     id: row.id,
@@ -11,7 +11,7 @@ export function mapProject(row) {
   };
 }
 
-export function mapTask(row) {
+function mapTask(row) {
   if (!row) return null;
   return {
     id: row.id,
@@ -22,7 +22,7 @@ export function mapTask(row) {
   };
 }
 
-export function mapNote(row) {
+function mapNote(row) {
   if (!row) return null;
   return {
     id: row.id,
@@ -32,7 +32,7 @@ export function mapNote(row) {
   };
 }
 
-export function mapActivity(row) {
+function mapActivity(row) {
   if (!row) return null;
   return {
     id: row.id,

@@ -1,3 +1,5 @@
+import { createStore } from "../store/create-store.js";
+
 // State Manager
 function createDashboardState(currentState, status, data = null, error = null) {
   const validStatuses = ["idle", "loading", "success", "error"];
@@ -26,14 +28,14 @@ function createDashboardState(currentState, status, data = null, error = null) {
 
 // Data Store
 function createDashboardStore(initialState) {
-  let currentState = initialState;
+  const store = createStore(initialState);
   return {
-    getState: function () {
-      return currentState;
-    },
-    setState: function (status, data, error) {
-      currentState = createDashboardState(currentState, status, data, error);
-      return currentState;
+    getState: store.getState,
+    subscribe: store.subscribe,
+    setState: (status, data, error) => {
+      return store.setState((currentState) =>
+        createDashboardState(currentState, status, data, error),
+      );
     },
   };
 }
