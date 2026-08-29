@@ -26,3 +26,16 @@ export async function getSession() {
 export function onAuthStateChange(callback) {
   return supabase.auth.onAuthStateChange(callback);
 }
+
+export async function getAuthenticatedUserId() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    throw new Error(`Failed to resolve authenticated user: ${error.message}`, {
+      cause: error,
+    });
+  }
+  if (!data?.user) {
+    throw new Error("No authenticated user: cannot resolve user_id");
+  }
+  return data.user.id;
+}
