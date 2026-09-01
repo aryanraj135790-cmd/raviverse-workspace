@@ -107,6 +107,30 @@ describe("createTaskCardElement", () => {
     expect(card.querySelector("[data-action='delete']")).not.toBeNull();
   });
 
+  it("should label the checkbox by completion state (a11y)", () => {
+    const activeCard = createTaskCardElement({ id: 13, title: "Todo", status: "todo" });
+    expect(activeCard.querySelector("input[type='checkbox']").getAttribute("aria-label")).toBe(
+      "Mark task as completed",
+    );
+
+    const doneCard = createTaskCardElement({ id: 14, title: "Done", status: "completed" });
+    expect(doneCard.querySelector("input[type='checkbox']").getAttribute("aria-label")).toBe(
+      "Reopen task",
+    );
+  });
+
+  it("should NOT nest the title input inside the accordion trigger button", () => {
+    const card = createTaskCardElement({ id: 15, title: "Safe", status: "active" });
+    const trigger = card.querySelector(".task-card__trigger");
+    const input = card.querySelector(".board-task-title");
+
+    expect(trigger).not.toBeNull();
+    expect(input).not.toBeNull();
+    // The trigger button must not CONTAIN the editable input (invalid HTML
+    // and a click trap that would collapse the card mid-edit).
+    expect(trigger.contains(input)).toBe(false);
+  });
+
     it("should render editable title and description inputs with a toggle-edit button", () => {
     const card = createTaskCardElement({
       id: 10,

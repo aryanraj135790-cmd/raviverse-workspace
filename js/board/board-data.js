@@ -1,23 +1,5 @@
 import { fetchBoardRawData } from "../supabase/board-queries.js";
-
-// Group tasks by their project. Tasks without a project land in a
-// pseudo-group keyed as null, rendered as "Unassigned".
-function groupTasksByProject(projects, tasks) {
-  const groups = projects.map((project) => ({
-    project,
-    tasks: tasks.filter((task) => task.projectId === project.id),
-  }));
-
-  const orphans = tasks.filter(
-    (task) => !projects.some((project) => project.id === task.projectId),
-  );
-
-  if (orphans.length > 0) {
-    groups.push({ project: null, tasks: orphans });
-  }
-
-  return groups;
-}
+import { groupTasksByProject } from "./group-tasks.js";
 
 // Get and shape board data
 async function getBoardData() {

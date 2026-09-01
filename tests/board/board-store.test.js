@@ -35,6 +35,14 @@ describe("createBoardStore — status transitions", () => {
 });
 
 describe("createBoardStore — optimistic create (ADR-005)", () => {
+  it("should expose task statuses aligned with the DB task_status enum", () => {
+    // The `task_status` enum is { todo, in_progress, completed } (default todo).
+    // The optimistic default must be a value the enum can actually store.
+    expect(TASK_STATUS.ACTIVE).toBe("todo");
+    expect(TASK_STATUS.COMPLETED).toBe("completed");
+    expect(TASK_STATUS.IN_PROGRESS).toBe("in_progress");
+  });
+
   it("should add the task with a temporary negative id and normalize project_id", () => {
     const store = readyStore();
     store.beginMutation("create");

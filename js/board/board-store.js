@@ -1,10 +1,13 @@
 import { createStore } from "../store/create-store.js";
+import { groupTasksByProject } from "./group-tasks.js";
 
-// Valid task statuses mirror the task_status enum: active/completed/archived
+// Task statuses mirror the `task_status` enum ({ todo, in_progress, completed }).
+// `todo` matches the DB column default, so the optimistic create never claims a
+// status the database enum could not store.
 const TASK_STATUS = {
-  ACTIVE: "active",
+  ACTIVE: "todo",
   COMPLETED: "completed",
-  ARCHIVED: "archived",
+  IN_PROGRESS: "in_progress",
 };
 
 const VALID_STATUSES = ["idle", "loading", "success", "error"];
@@ -58,23 +61,6 @@ function createBoardStore(initialState) {
       ...data,
       groups: groupTasksByProject(projects, tasks),
     };
-  }
-
-  function groupTasksByProject(projects, tasks) {
-    const groups = projects.map((project) => ({
-      project,
-      tasks: tasks.filter((task) => task.projectId === project.id),
-    }));
-
-    const orphans = tasks.filter(
-      (task) => !projects.some((project) => project.id === task.projectId),
-    );
-
-    if (orphans.length > 0) {
-      groups.push({ project: null, tasks: orphans });
-    }
-
-    return groups;
   }
 
   return {
