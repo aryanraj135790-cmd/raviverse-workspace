@@ -9,6 +9,8 @@ const {
   mockSetupAuthUI,
   mockInitDashboard,
   mockDestroyDashboard,
+  mockInitBoard,
+  mockDestroyBoard,
   mockRegisterRoute,
   mockInitRouter,
 } = vi.hoisted(() => ({
@@ -17,6 +19,8 @@ const {
   mockSetupAuthUI: vi.fn(),
   mockInitDashboard: vi.fn(),
   mockDestroyDashboard: vi.fn(),
+  mockInitBoard: vi.fn(),
+  mockDestroyBoard: vi.fn(),
   mockRegisterRoute: vi.fn(),
   mockInitRouter: vi.fn(),
 }));
@@ -48,6 +52,11 @@ vi.mock("../js/dashboard/dashboard-controller.js", () => ({
   destroyDashboard: mockDestroyDashboard,
 }));
 
+vi.mock("../js/board/board-controller.js", () => ({
+  initBoard: mockInitBoard,
+  destroyBoard: mockDestroyBoard,
+}));
+
 import "../js/app.js";
 
 describe("Application Bootstrapping", () => {
@@ -60,16 +69,26 @@ describe("Application Bootstrapping", () => {
   });
 
   it("should register the dashboard route with a mount/destroy lifecycle pair", () => {
-    expect(mockRegisterRoute).toHaveBeenCalledTimes(1);
+    expect(mockRegisterRoute).toHaveBeenCalledTimes(2);
 
-    const [route, lifecycle] = mockRegisterRoute.mock.calls[0];
+    const [dashboardRoute, dashboardLifecycle] = mockRegisterRoute.mock.calls[0];
 
-    expect(route).toBe("#/dashboard");
+    expect(dashboardRoute).toBe("#/dashboard");
 
     // The route must own BOTH halves of the view lifecycle
-    expect(lifecycle.mount).toBe(mockInitDashboard);
+    expect(dashboardLifecycle.mount).toBe(mockInitDashboard);
 
-    expect(lifecycle.destroy).toBe(mockDestroyDashboard);
+    expect(dashboardLifecycle.destroy).toBe(mockDestroyDashboard);
+  });
+
+  it("should register the tasks route with a mount/destroy lifecycle pair", () => {
+    const [tasksRoute, tasksLifecycle] = mockRegisterRoute.mock.calls[1];
+
+    expect(tasksRoute).toBe("#/tasks");
+
+    expect(tasksLifecycle.mount).toBe(mockInitBoard);
+
+    expect(tasksLifecycle.destroy).toBe(mockDestroyBoard);
   });
 
   it("should boot the router with the dashboard as the default route", () => {
