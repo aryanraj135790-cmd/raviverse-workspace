@@ -118,12 +118,15 @@ function refreshBoard() {
 
 async function handleCreateTask(taskData) {
   boardStore.beginMutation("create");
-  const tempId = boardStore.applyOptimisticCreate(taskData);
+  // Apply the optimistic row (returns a throwaway temp id we never persist
+  // to UI state). Auto-expand uses the REAL confirmed id, not this temp id.
+  boardStore.applyOptimisticCreate(taskData);
   renderBoardState(boardStore.getState());
 
-  // Auto-expand the newly created task card so the user sees it immediately.
-  const tempCard = document.querySelector(`[data-task-id="${tempId}"]`);
-  if (tempCard) expandTask(tempId, tempCard);
+  // The temp id is only tracked until the DB confirms; we do NOT mark it open
+  // here. We auto-expand the REAL card on confirm so the entry in the UI-state
+  // set always matches a real task id (no stale temp-id leak).
+  let confirmedTaskId = null;
 
   try {
     const rawTask = await createTask(taskData);
@@ -142,7 +145,7 @@ async function handleCreateTask(taskData) {
       deletedAt: rawTask.deleted_at,
       projectName: null,
     };
-
+    confirmedTaskId = realTask.id;
     boardStore.confirmCreate(realTask);
     showToast("Task created.", "success");
   } catch (error) {
@@ -151,6 +154,15 @@ async function handleCreateTask(taskData) {
     console.error("createTask failed ->", error.message, error.cause ?? "");
   } finally {
     renderBoardState(boardStore.getState());
+
+    // Auto-expand the confirmed card so the user sees it immediately, and
+    // forget the throwaway temp id (defensive: it is never in openTasks now).
+    if (confirmedTaskId !== null) {
+      const realCard = document.querySelector(
+        `[data-task-id="${confirmedTaskId}"]`,
+      );
+      if (realCard) expandTask(confirmedTaskId, realCard);
+    }
   }
 }
 

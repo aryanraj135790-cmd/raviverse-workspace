@@ -1,4 +1,4 @@
-// Pure render functions — mirror dashboard-renderer.js conventions.
+﻿// Pure render functions — mirror dashboard-renderer.js conventions.
 // This module also owns *ephemeral UI state* (accordion open/close, edit
 // mode) in module-level Sets so that state survives the board's full
 // re-renders after optimistic mutations. Use resetBoardUiState() to clear.
@@ -191,7 +191,7 @@ function formatTimestamp(value) {
     hour12: true,
   })
     .format(date)
-    .replace(",", " ·");
+    .replace(/,/g, " ·");
 }
 
 // Convert an ISO date (or null) into YYYY-MM-DD for <input type="date">.
@@ -228,7 +228,7 @@ function createCardCheckbox(isCompleted) {
   checkbox.type = "checkbox";
   checkbox.name = "task-completed";
   checkbox.className = "board-task-complete";
-  checkbox.setAttribute("aria-label", "Mark task as completed");
+  checkbox.setAttribute("aria-label", isCompleted ? "Reopen task" : "Mark task as completed");
   checkbox.setAttribute("data-action", isCompleted ? "reopen" : "complete");
   checkbox.checked = isCompleted;
   const mark = document.createElement("span");
@@ -298,7 +298,7 @@ function createTaskCardElement(task, projectName = null) {
   chevron.setAttribute("aria-hidden", "true");
   chevron.textContent = "▶";
 
-  const titleWrap = document.createElement("span");
+  const titleWrap = document.createElement("div");
   titleWrap.className = "task-card__title";
 
   const titleText = document.createElement("span");
@@ -312,9 +312,9 @@ function createTaskCardElement(task, projectName = null) {
   titleInput.setAttribute("aria-label", "Task title");
   titleInput.setAttribute("data-action", "edit-title");
 
-  titleWrap.append(titleText, titleInput);
-  trigger.append(chevron, titleWrap);
-  header.appendChild(trigger);
+  trigger.append(chevron, titleText);
+  titleWrap.append(trigger, titleInput);
+  header.appendChild(titleWrap);
 
   // Actions: edit icon + menu (⋮)
   const actions = document.createElement("div");
