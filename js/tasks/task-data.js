@@ -58,7 +58,6 @@ export async function getTaskData() {
   const tasks = (tasksRes.data || []).map(mapTask);
 
   const tasksByProjectId = new Map(projects.map((p) => [p.id, []]));
-  const validTasks = [];
   for (const task of tasks) {
     const group = tasksByProjectId.get(task.projectId);
 
@@ -70,7 +69,6 @@ export async function getTaskData() {
     }
 
     group.push(task);
-    validTasks.push(task);
   }
 
   const groupedData = projects.map((project) => ({
