@@ -1,5 +1,5 @@
 // SVG Helper to ensure proper namespace and attributes
-function createSvg(pathD, viewBox = "0 0 24 24", className = "") {
+export function createSvg(pathD, viewBox = "0 0 24 24", className = "") {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   if (className) svg.setAttribute("class", className);
   svg.setAttribute("viewBox", viewBox);
@@ -17,13 +17,18 @@ function createSvg(pathD, viewBox = "0 0 24 24", className = "") {
 }
 
 // Icon Paths Mapping
-const ICONS = {
+export const ICONS = {
   hamburger: "M4 6h16M4 12h16M4 18h16",
   plus: "M12 4v16m8-8H4",
   search: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
   close: "M6 18L18 6M6 6l12 12",
   trash:
     "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
+  folder:
+    "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z",
+  clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+  kebab:
+    "M12 8a2 2 0 100-4 2 2 0 000 4zm0 6a2 2 0 100-4 2 2 0 000 4zm0 6a2 2 0 100-4 2 2 0 000 4z",
 };
 
 // Builds the New Task or Edit Task Modal
