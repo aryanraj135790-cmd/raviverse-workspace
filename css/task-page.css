@@ -11,12 +11,8 @@
    TAILWIND → TOKEN CLASS MAP (reference HTML → this file)
    -------------------------------------------------------
    Layout / shell
-     main.flex-1.flex.flex-col.h-screen.overflow-hidden
-        → .task-app (flex column, 100vh, overflow hidden)
-     header.md:hidden.border-b.border-border.bg-surface-secondary
-        → .task-mobile-header
-     .flex-1.overflow-y-auto.custom-scrollbar.p-4.md:p-8
-        → .task-scroll (flex:1, overflow-y-auto, padding)
+     main.flex-1.flex.flex-col.h-screen.overflow-y-auto
+        → .task-app (flex column, 100%, overflow-y-auto)
      .max-w-5xl.mx-auto.space-y-6
         → .task-container (max-width + centered + vertical gap)
 
@@ -75,77 +71,20 @@
    ----------------------------------------------------------
    The body is a grid: row 1 = <header>, row 2 = app root.
    body has height:100vh + overflow:hidden.
-   The task page must FILL row 2, never exceed the viewport, and
-   scroll only its inner content area — matching the reference
-   `h-screen overflow-hidden` + `flex-1 overflow-y-auto`.
+   The task page fills #app-view and scrolls via .task-app overflow-y-auto.
+   Matching the reference `h-screen overflow-y-auto`.
    ---------------------------------------------------------- */
 .task-app {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
   background-color: var(--color-background);
   color: var(--color-text-primary);
 }
 
-/* Mobile-only header — shown below the global header breakpoint */
-.task-mobile-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.task-mobile-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: inherit;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-md);
-  color: var(--color-text-primary);
-}
-
-.task-mobile-logo {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
-}
-
-.task-mobile-menu-btn {
-  padding: var(--space-sm);
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-/* The scrollable content area — the ONLY element that scrolls */
-.task-scroll {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-  padding: var(--space-xl);
-}
-
-/* Max-width centered column holding all page content */
 .task-container {
   width: 100%;
-  max-width: 64rem; /* 1024px ≈ max-w-5xl */
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
@@ -199,7 +138,9 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
 }
 
 .btn-primary:hover {
@@ -222,7 +163,9 @@
   font-weight: var(--font-weight-medium);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .btn-secondary:hover {
@@ -255,7 +198,9 @@
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .task-tab:hover {
@@ -319,7 +264,9 @@
   padding-left: 2.5rem;
   font-size: var(--font-size-sm);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .task-search::placeholder {
@@ -357,12 +304,15 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   outline: none;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .task-select:focus {
   border-color: var(--color-accent);
   color: var(--color-text-primary);
+}
 /* ----------------------------------------------------------
    Task list & groups
    ---------------------------------------------------------- */
@@ -409,12 +359,15 @@
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .task-card:hover {
   background-color: var(--color-surface-active);
   border-color: var(--color-border);
+  cursor: pointer;
 }
 
 /* The status-leading element: checkbox OR in-progress dot */
@@ -437,7 +390,9 @@
   margin: 0;
   display: grid;
   place-content: center;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .task-checkbox:checked {
@@ -477,8 +432,13 @@
 }
 
 @keyframes task-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Card content column */
@@ -550,6 +510,11 @@
   font-size: 0.6875rem;
 }
 
+.task-project-pill svg {
+  width: 1rem;
+  height: auto;
+}
+
 /* Priority indicators */
 .task-priority {
   display: inline-flex;
@@ -567,14 +532,26 @@
   border-radius: var(--radius-full);
 }
 
-.task-priority--high { color: var(--color-status-error); }
-.task-priority--high .task-priority-dot { background-color: var(--color-status-error); }
+.task-priority--high {
+  color: var(--color-status-error);
+}
+.task-priority--high .task-priority-dot {
+  background-color: var(--color-status-error);
+}
 
-.task-priority--medium { color: var(--color-status-warning); }
-.task-priority--medium .task-priority-dot { background-color: var(--color-status-warning); }
+.task-priority--medium {
+  color: var(--color-status-warning);
+}
+.task-priority--medium .task-priority-dot {
+  background-color: var(--color-status-warning);
+}
 
-.task-priority--low { color: var(--color-text-muted); }
-.task-priority--low .task-priority-dot { background-color: var(--color-text-muted); }
+.task-priority--low {
+  color: var(--color-text-muted);
+}
+.task-priority--low .task-priority-dot {
+  background-color: var(--color-text-muted);
+}
 
 /* Due date indicator */
 .task-due {
@@ -585,7 +562,9 @@
   font-size: 0.6875rem;
 }
 
-.task-due--today { color: var(--color-status-warning); }
+.task-due--today {
+  color: var(--color-status-warning);
+}
 /* Completed state */
 .task-card--completed {
   opacity: 0.7;
@@ -611,7 +590,9 @@
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .task-kebab:hover {
@@ -781,7 +762,9 @@
   font-size: var(--font-size-sm);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .task-modal-input::placeholder,
@@ -875,5 +858,4 @@
 .btn-secondary:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-}
 }

@@ -5,7 +5,6 @@
 
 export function getTaskDom(root = document) {
   return {
-    mobileMenuBtn: root.querySelector("[data-mobile-menu-btn]"),
     newTaskBtn: root.querySelector("[data-new-task-btn]"),
 
     tabs: {
