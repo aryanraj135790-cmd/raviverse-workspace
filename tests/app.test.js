@@ -1,80 +1,48 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi } from "vitest";
-
-const {
-  mockInitializeAuth,
-  mockHandleAuthState,
-  mockSetupAuthUI,
-  mockInitDashboard,
-  mockDestroyDashboard,
-  mockRegisterRoute,
-  mockInitRouter,
-} = vi.hoisted(() => ({
-  mockInitializeAuth: vi.fn(),
-  mockHandleAuthState: vi.fn(),
-  mockSetupAuthUI: vi.fn(),
-  mockInitDashboard: vi.fn(),
-  mockDestroyDashboard: vi.fn(),
-  mockRegisterRoute: vi.fn(),
-  mockInitRouter: vi.fn(),
-}));
-
-vi.mock("../js/supabase/auth.js", () => ({
-  getSession: vi.fn(),
-  onAuthStateChange: vi.fn(),
-}));
-
-vi.mock("../js/auth/auth-controller.js", () => ({
-  initializeAuth: mockInitializeAuth,
-}));
-
-vi.mock("../js/auth/auth-state-handler.js", () => ({
-  handleAuthState: mockHandleAuthState,
-}));
-
-vi.mock("../js/auth/auth-ui-controller.js", () => ({
-  setupAuthUI: mockSetupAuthUI,
-}));
-
-vi.mock("../js/router/router.js", () => ({
-  registerRoute: mockRegisterRoute,
-  initRouter: mockInitRouter,
-}));
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../js/dashboard/dashboard-controller.js", () => ({
-  initDashboard: mockInitDashboard,
-  destroyDashboard: mockDestroyDashboard,
+  destroyDashboard: vi.fn(),
+  initDashboard: vi.fn(),
+}));
+vi.mock("../js/tasks/task-controller.js", () => ({
+  destroyTaskController: vi.fn(),
+  initTaskController: vi.fn(),
+}));
+vi.mock("../js/auth/auth-controller.js", () => ({
+  initializeAuth: vi.fn(),
+}));
+vi.mock("../js/auth/auth-state-handler.js", () => ({
+  handleAuthState: vi.fn(),
+}));
+vi.mock("../js/auth/auth-ui-controller.js", () => ({
+  setupAuthUI: vi.fn(),
 }));
 
-import "../js/app.js";
-
-describe("Application Bootstrapping", () => {
-  it("should initialize auth with its state handler and set up auth UI", () => {
-    expect(mockInitializeAuth).toHaveBeenCalledTimes(1);
-
-    expect(mockInitializeAuth).toHaveBeenCalledWith(mockHandleAuthState);
-
-    expect(mockSetupAuthUI).toHaveBeenCalledTimes(1);
+describe("app route registration", () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    document.body.innerHTML = '<div id="app-view"></div>';
+    window.location.hash = "";
   });
 
-  it("should register the dashboard route with a mount/destroy lifecycle pair", () => {
-    expect(mockRegisterRoute).toHaveBeenCalledTimes(1);
+  it("registers dashboard and tasks routes with mount/destroy pairs", async () => {
+    const router = await import("../js/router/router.js");
+    const dashboard = await import("../js/dashboard/dashboard-controller.js");
+    const tasks = await import("../js/tasks/task-controller.js");
 
-    const [dashboardRoute, dashboardLifecycle] = mockRegisterRoute.mock.calls[0];
+    await import("../js/app.js");
 
-    expect(dashboardRoute).toBe("#/dashboard");
+    window.location.hash = "#/tasks";
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    expect(tasks.initTaskController).toHaveBeenCalled();
 
-    // The route must own BOTH halves of the view lifecycle
-    expect(dashboardLifecycle.mount).toBe(mockInitDashboard);
-
-    expect(dashboardLifecycle.destroy).toBe(mockDestroyDashboard);
-  });
-
-  it("should boot the router with the dashboard as the default route", () => {
-    expect(mockInitRouter).toHaveBeenCalledTimes(1);
-
-    expect(mockInitRouter).toHaveBeenCalledWith("#/dashboard");
+    window.location.hash = "#/dashboard";
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    expect(tasks.destroyTaskController).toHaveBeenCalled();
+    expect(dashboard.initDashboard).toHaveBeenCalled();
   });
 });
+

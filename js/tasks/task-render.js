@@ -1,4 +1,4 @@
-import { createSvg, ICONS } from "./task-view";
+import { createSvg, ICONS } from "./task-view.js";
 
 // Formats a due date for display helper function.
 export function formatDueDate(dueDate) {
@@ -60,6 +60,7 @@ function renderTaskCardMeta(task, projectName = "Unknown") {
 export function renderTaskCard(task, projectName) {
   const root = document.createElement("div");
   root.className = "task-card";
+  root.dataset.taskId = task.id;
   if (task.status === "completed") {
     root.classList.add("task-card--completed");
   }
@@ -126,7 +127,6 @@ export function renderTaskCard(task, projectName) {
 
   menu.append(editBtn, deleteBtn);
   menuWrap.append(kebabBtn, menu);
-  bodyCol.appendChild(menuWrap);
 
   const metaRow = renderTaskCardMeta(task, projectName);
   if (metaRow) {
@@ -136,6 +136,7 @@ export function renderTaskCard(task, projectName) {
   // assemble
   root.appendChild(checkCol);
   root.appendChild(bodyCol);
+  root.appendChild(menuWrap);
   return root;
 }
 

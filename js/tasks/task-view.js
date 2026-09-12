@@ -3,6 +3,8 @@ export function createSvg(pathD, viewBox = "0 0 24 24", className = "") {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   if (className) svg.setAttribute("class", className);
   svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("width", "24");
+  svg.setAttribute("height", "24");
   svg.setAttribute("fill", "none");
   svg.setAttribute("stroke", "currentColor");
   svg.setAttribute("stroke-width", "2");
@@ -61,7 +63,7 @@ function createFormModal({ modalType, titleText, formType, submitText }) {
   const form = document.createElement("form");
   form.className = "task-modal-body";
   form.dataset.form = formType;
-
+  form.id = formType;
   // Title Field
   const titleField = document.createElement("div");
   titleField.className = "task-modal-field";
@@ -145,6 +147,7 @@ function createFormModal({ modalType, titleText, formType, submitText }) {
 
   const submitBtn = document.createElement("button");
   submitBtn.className = "btn-primary";
+  submitBtn.setAttribute("form", formType);
   submitBtn.type = "submit";
   submitBtn.dataset.modalSubmit = "";
   submitBtn.textContent = submitText;
@@ -210,31 +213,6 @@ function createDeleteModal() {
 export function createTaskView() {
   const main = document.createElement("main");
   main.className = "task-app";
-
-  // Mobile Header
-  const mobileHeader = document.createElement("header");
-  mobileHeader.className = "task-mobile-header";
-
-  const mobileBrand = document.createElement("div");
-  mobileBrand.className = "task-mobile-brand";
-  const logo = document.createElement("div");
-  logo.className = "task-mobile-logo";
-  logo.textContent = "R";
-  const brandName = document.createElement("span");
-  brandName.textContent = "RaviVerse";
-  mobileBrand.append(logo, brandName);
-
-  const mobileMenuBtn = document.createElement("button");
-  mobileMenuBtn.className = "task-mobile-menu-btn";
-  mobileMenuBtn.dataset.mobileMenuBtn = "";
-  mobileMenuBtn.setAttribute("aria-label", "Open menu");
-  mobileMenuBtn.appendChild(createSvg(ICONS.hamburger));
-
-  mobileHeader.append(mobileBrand, mobileMenuBtn);
-
-  // Scroll Area & Container
-  const scrollArea = document.createElement("div");
-  scrollArea.className = "task-scroll";
 
   const container = document.createElement("div");
   container.className = "task-container";
@@ -385,7 +363,7 @@ export function createTaskView() {
 
   // Assemble Main Scrollable Container
   container.append(titleBar, tabsNav, toolbar, taskList, emptyState);
-  scrollArea.appendChild(container);
+  main.appendChild(container);
 
   // 3. Modals
   const newTaskModal = createFormModal({
@@ -405,13 +383,7 @@ export function createTaskView() {
   const deleteModal = createDeleteModal();
 
   // Root Tree Assembly
-  main.append(
-    mobileHeader,
-    scrollArea,
-    newTaskModal,
-    editTaskModal,
-    deleteModal,
-  );
+  main.append(container, newTaskModal, editTaskModal, deleteModal);
 
   return main;
 }

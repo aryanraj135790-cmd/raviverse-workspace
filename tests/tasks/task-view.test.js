@@ -22,8 +22,6 @@ describe("Task View & DOM Contract", () => {
 
   test("contains all essential structural region classes", () => {
     const requiredRegions = [
-      ".task-mobile-header",
-      ".task-scroll",
       ".task-container",
       ".task-titlebar",
       ".task-tabs",
@@ -40,7 +38,6 @@ describe("Task View & DOM Contract", () => {
   test("resolves all single-element data-* hooks via getTaskDom(view)", () => {
     const dom = getTaskDom(view);
 
-    expect(dom.mobileMenuBtn).not.toBeNull();
     expect(dom.newTaskBtn).not.toBeNull();
     expect(dom.searchInput).not.toBeNull();
     expect(dom.priorityFilter).not.toBeNull();

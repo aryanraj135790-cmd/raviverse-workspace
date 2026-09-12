@@ -10,6 +10,7 @@ import { getTaskData } from "./task-data.js";
 
 const initialState = {
   tasksByProjectId: {},
+  projectNames: {},
   status: "idle",
   error: null,
 };
@@ -43,13 +44,16 @@ export function createTaskStore() {
         const { groupedData } = await getTaskData();
 
         const tasksByProjectId = {};
+        const projectNames = {};
         for (const project of groupedData) {
           tasksByProjectId[project.id] = project.tasks;
+          projectNames[project.id] = project.name;
         }
 
         store.setState((prevState) => ({
           ...prevState,
           tasksByProjectId,
+          projectNames,
           status: "ready",
           error: null,
         }));
